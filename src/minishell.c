@@ -1,16 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-#define MAX_INPUT 1024
-#define MAX_ARGS 32
+#include "../include/minishell.h"
 
 /**
  * A simple shell implementation.
  */
+
+static char history[MAX_HISTORY][MAX_COMMAND_LENGTH];
+static int history_count = 0;
+static int current_index = 0;
+
 int main() {
     char input[MAX_INPUT];
     char* args[MAX_ARGS];
@@ -19,18 +16,24 @@ int main() {
         printf("msh> ");
         fflush(stdout);
 
-        if (fgets(input, MAX_INPUT, stdin) == NULL) {
-            perror("fgets failed");
-            continue;
-        }
+        read_input(input, history, &history_count, &current_index);
 
-        input[strcspn(input, "\n")] = '\0';
+	if(strlen(input) == 0) continue;
+	
+	// add input to command history
+	add_to_history(input, history, &history_count, &current_index);
 
         // check for exit command
         if (strcmp(input, "exit") == 0) {
             printf("mshell: bye\n");
             break;
         }
+	
+	// check for print history command
+	if (strcmp(input, "print_h") == 0) {
+    	    print_history(history, &history_count, &current_index);
+	    continue;
+    	}
 
         // tokenize input
         char* token = strtok(input, " ");
