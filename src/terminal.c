@@ -1,49 +1,7 @@
-#include "../include/minishell.h"
+#include "../include/terminal.h"
 
-struct termios default_t;
-
-// adding a command to the command history 
-void add_to_history(char const *command, char history[][MAX_COMMAND_LENGTH], int *history_count, int *current_index) {
-	if(*history_count < MAX_HISTORY) {
-		if (strlen(command) < MAX_COMMAND_LENGTH) {
-			strncpy(history[*history_count], command, MAX_COMMAND_LENGTH - 1);
-			history[*history_count][MAX_COMMAND_LENGTH - 1] = '\0';
-			(*history_count)++;
-		}
-		current_index = history_count;
-	}
-}
-
-// by pressing the UP key this fuction will return the previous command if it exists
-// returns an empty string if at the start of history
-const char* get_history_up(char history[][MAX_COMMAND_LENGTH], int *history_count, int *current_index) {
-	if(*current_index > 0) {
-		(*current_index)--;
-		return history[*current_index];
-	}
-	return NULL;
-}
-
-// by pressing DOWN key this function will return the next command from the history if it exists
-// returns an empty stirng if at the end of history and resets the current_index to history_count
-const char* get_history_down(char history[][MAX_COMMAND_LENGTH], int *history_count, int *current_index) {
-	if(*current_index < (*history_count) - 1) {
-		(*current_index)++;
-		return history[*current_index];
-	} else {
-		*current_index = *history_count;
-		return "";
-	}
-
-	return NULL;
-}
-
-void print_history(char history[][MAX_COMMAND_LENGTH], int *history_count, int *current_index){
-	int i;
-	for(i = 0; i < *history_count; i++) {
-		printf("%s\n", history[i]);
-	}
-}
+//default configuration of terminal
+static struct termios default_t;
 
 // restoring the terminal to default settings
 void disable_raw_mode() {
@@ -71,12 +29,12 @@ void enable_raw_mode() {
 
 // read input from user , enanbling raw terminal mode to read one character at the time
 // allowing to navigate trough the command history via arrow_up and arrow_down
-void read_input(char* buffer, char history[][MAX_COMMAND_LENGTH], int *history_count, int *current_index) {
+void read_input(char* buffer) {
 	int len = 0;
 	buffer[len] = '\n';
 	
 	// reset current command history index to history count after pressing enter
-	*current_index = *history_count;
+	reset_current_index();
 	enable_raw_mode();
 
 	char c;
@@ -105,7 +63,7 @@ void read_input(char* buffer, char history[][MAX_COMMAND_LENGTH], int *history_c
 
 							// deleting the arrow_down in the terminal before printing the
 							// previous command from history
-							const char* prevCmd = get_history_up(history, history_count, current_index);
+							const char* prevCmd = get_history_up();
 
 							if(prevCmd) {
 								for(int i = 0; i < len; i++) printf("\b \b");
@@ -118,7 +76,7 @@ void read_input(char* buffer, char history[][MAX_COMMAND_LENGTH], int *history_c
 						
 							// deleting the arrow_down in the terminal before printing the next
 							// command from history
-							const char* nextCmd = get_history_down(history, history_count, current_index);
+							const char* nextCmd = get_history_down();
 							for(int i = 0; i < len; i++) printf("\b \b");
 
 							if(nextCmd) {

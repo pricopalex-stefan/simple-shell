@@ -1,27 +1,25 @@
-#include "../include/minishell.h"
+#include "../include/terminal.h"
+#include "../include/history.h"
 
 /**
  * A simple shell implementation.
  */
-
-static char history[MAX_HISTORY][MAX_COMMAND_LENGTH];
-static int history_count = 0;
-static int current_index = 0;
+static char input[MAX_INPUT];
+static char* args[MAX_ARGS];
 
 int main() {
-    char input[MAX_INPUT];
-    char* args[MAX_ARGS];
+    init_history();
 
     while (1) {
         printf("msh> ");
         fflush(stdout);
 
-        read_input(input, history, &history_count, &current_index);
+        read_input(input);
 
 	if(strlen(input) == 0) continue;
 	
 	// add input to command history
-	add_to_history(input, history, &history_count, &current_index);
+	add_to_history(input);
 
         // check for exit command
         if (strcmp(input, "exit") == 0) {
@@ -31,7 +29,7 @@ int main() {
 	
 	// check for print history command
 	if (strcmp(input, "print_h") == 0) {
-    	    print_history(history, &history_count, &current_index);
+    	    print_history();
 	    continue;
     	}
 
